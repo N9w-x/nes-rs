@@ -10,7 +10,6 @@ use crate::ram::CPURam;
 use crate::rom::Cartridge;
 
 bitflags! {
-    #[derive(PartialEq,Eq)]
     pub struct Flags:u8  {
         const C  = 1 << 0;
         const Z  = 1 << 1;
@@ -29,7 +28,7 @@ impl Flags {
     }
 }
 
-#[derive(Eq)]
+#[derive(Eq, Copy, Clone)]
 pub struct Regs {
     pub A: u8,
     pub X: u8,
@@ -41,9 +40,12 @@ pub struct Regs {
 
 impl PartialEq for Regs {
     fn eq(&self, other: &Self) -> bool {
-        self.A == other.A && self.X == other.X
-            && self.Y == other.Y && self.SP == other.SP &&
-            self.P == other.P && self.PC == other.PC
+        self.A == other.A
+            && self.X == other.X
+            && self.Y == other.Y
+            && self.SP == other.SP
+            && self.P == other.P
+            && self.PC == other.PC
     }
 }
 
@@ -102,61 +104,65 @@ impl CPU {
             clock: (),
         }
     }
-    
+
+    pub fn get_regs(&self) -> Regs {
+        self.regs
+    }
+
     #[inline]
     fn bus_port(&self) -> RefMut<CPUBus> {
         (*self.bus_port).borrow_mut()
     }
-    
+
     #[inline]
     pub(crate) fn get_next_inst(&self) -> &'static Inst {
         let opcode = self.bus_port().read(self.regs.PC as usize);
         &INST_TABLE[&opcode]
     }
-    
+
     #[inline]
     fn get_pc(&self) -> usize {
         self.regs.PC as usize
     }
-    
+
     fn accumulator(&self) -> u16 {
         self.regs.A as u16
     }
-    
+
     fn immediate(&self) -> u16 {
         (self.get_pc() + 1) as u16
     }
-    
+
     fn zero_page(&self) -> u16 {
         let bus_port = self.bus_port();
         bus_port.read(self.get_pc() + 1) as u16
     }
-    
+
     fn zero_page_x(&self) -> u16 {
         self.zero_page() + self.regs.X as u16
     }
-    
+
     fn zero_page_y(&self) -> u16 {
         self.zero_page() + self.regs.Y as u16
     }
-    
+
     fn realtive(&mut self) {
         let imm = self.bus_port().read(self.get_pc() + 1);
         self.regs.PC = (self.get_pc() as i16 + imm as i16) as u16;
     }
-    
+
     fn absolute(&self) -> u16 {
         self.bus_port().read_u16(self.get_pc() + 1)
     }
-    
+
     fn absolute_x(&self) -> u16 {
         self.absolute() + self.regs.X as u16
     }
-    
+
     fn absolute_y(&self) -> u16 {
         self.absolute() + self.regs.Y as u16
     }
-    
+
     fn indirect(&self) -> u16 {
         //handle nes indirect bug
         if (self.get_pc() + 1) & 0x00ff == 0xff {
@@ -167,24 +173,24 @@ impl CPU {
             self.bus_port().read_u16(self.get_pc() + 1) as u16
         }
     }
-    
+
     fn indexed_indirect(&self) -> u16 {
         (self.bus_port().read((self.get_pc() + 1) as usize) + self.regs.X) as u16
     }
-    
+
     fn indirect_indexed(&self) -> u16 {
         let port = self.bus_port();
         let address = port.read(self.get_pc() + 1) as usize;
         port.read(address) as u16 + self.regs.Y as u16
     }
-    
+
     fn increase_pc(&mut self, val: usize) {
         self.regs.PC += val as u16;
     }
-    
+
     fn handle_mem_read(&mut self, address_type: &AddressingType) -> u16 {
         let handle_read = |address: usize| self.bus_port().read(address) as u16;
-        
+
         match address_type {
             AddressingType::Accumulator => handle_read(self.accumulator() as usize),
             AddressingType::Immediate => handle_read(self.immediate() as usize),
@@ -204,7 +210,7 @@ impl CPU {
             }
         }
     }
-    
+
     fn handle_mem_write(&mut self, address_type: &AddressingType, val: u8) {
         let handle_write = |address: u16, val: u8| {
             self.bus_port().write(address as usize, val);
@@ -226,33 +232,29 @@ impl CPU {
             _ => unreachable!(),
         }
     }
-    
+
     #[allow(unused)]
     pub fn handle_flag_update(&mut self, val: u8) {
-        if val == 0 {
-            self.regs.P.insert(Flags::Z);
-        }
-        
-        if val & 0b1000_0000 != 0 {
-            self.regs.P.insert(Flags::N);
-        }
+        self.regs.P.set(Flags::Z, val == 0);
+
+        self.regs.P.set(Flags::N, val & 0b1000_0000 != 0);
     }
-    
+
     fn get_real_sp(&self) -> usize {
         self.regs.SP as usize + 0x100
     }
-    
+
     pub fn push_stack(&mut self, val: u8) {
         self.bus_port().write(self.get_real_sp(), val);
         self.regs.SP -= 1;
     }
-    
+
     pub fn pop_stack(&mut self) -> u8 {
         let val = self.bus_port().read(self.get_real_sp());
         self.regs.SP += 1;
         val
     }
-    
+
     pub fn exec_once(&mut self, inst: &Inst) {
         match inst.opcode {
             Opcode::ADC => {
@@ -294,44 +296,37 @@ impl CPU {
             }
             Opcode::BIT => {
                 let imm = self.handle_mem_read(&inst.address_type);
-                if (imm as u8 & self.regs.A) == 0 {
-                    self.regs.P.insert(Flags::Z);
-                }
-                
+                self.regs.P.set(Flags::Z, (imm as u8 & self.regs.A) == 0);
+
                 //update overflow flag
-                self.regs.P.bits |= imm as u8 & 0b0100_0000;
+                self.regs.P.set(Flags::V, imm as u8 & 0b0100_0000 != 0);
                 //update overflow flag
-                self.regs.P.bits |= imm as u8 & 0b1000_0000;
+                self.regs.P.set(Flags::N, imm as u8 & 0b1000_0000 != 0);
             }
             Opcode::BMI => {
                 if self.regs.P.contains(Flags::N) {
                     self.handle_mem_read(&inst.address_type);
-                    return;
                 }
             }
             Opcode::BNE => {
                 if !self.regs.P.contains(Flags::Z) {
                     self.handle_mem_read(&inst.address_type);
-                    return;
                 }
             }
             Opcode::BPL => {
                 if !self.regs.P.contains(Flags::N) {
                     self.handle_mem_read(&inst.address_type);
-                    return;
                 }
             }
             Opcode::BRK => {}
             Opcode::BVC => {
                 if !self.regs.P.contains(Flags::V) {
                     self.handle_mem_read(&inst.address_type);
-                    return;
                 }
             }
             Opcode::BVS => {
                 if self.regs.P.contains(Flags::V) {
                     self.handle_mem_read(&inst.address_type);
-                    return;
                 }
             }
             Opcode::CLC => {
@@ -413,18 +408,18 @@ impl CPU {
             }
             Opcode::LDA => {
                 let val = self.handle_mem_read(&inst.address_type) as u8;
-                self.handle_flag_update(val);
                 self.regs.A = val;
+                self.handle_flag_update(self.regs.A);
             }
             Opcode::LDX => {
                 let val = self.handle_mem_read(&inst.address_type) as u8;
-                self.handle_flag_update(val);
                 self.regs.X = val;
+                self.handle_flag_update(self.regs.X);
             }
             Opcode::LDY => {
                 let val = self.handle_mem_read(&inst.address_type) as u8;
-                self.handle_flag_update(val);
                 self.regs.Y = val;
+                self.handle_flag_update(self.regs.Y);
             }
             Opcode::LSR => {
                 let val = self.handle_mem_read(&inst.address_type) as u8;
@@ -484,7 +479,7 @@ impl CPU {
             Opcode::SBC => {
                 let val = self.handle_mem_read(&inst.address_type) as u8;
                 let res = self.regs.A - val - !self.regs.P.contains(Flags::C) as u8;
-                
+
                 self.regs.P.set(Flags::C, res as u16 & 0x100 == 0);
                 self.regs
                     .P
@@ -539,7 +534,7 @@ impl CPU {
 
 #[test]
 fn cpu_test() {
-    
+
     //let cart = Cartridge::new("./test/nestest.nes");
     //let ram = CPURam::default();
     //let bus = CPUBus::connect(Rc::new(RefCell::new(cart)), Rc::new(RefCell::new(ram)));
