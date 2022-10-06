@@ -61,6 +61,15 @@ pub enum Opcode {
     TXA,
     TXS,
     TYA,
+    //invalid,
+    LAX,
+    SAX,
+    DCP,
+    ISC,
+    SLO,
+    RLA,
+    SRE,
+    RRA,
 }
 
 #[derive(Debug, Clone)]
@@ -717,7 +726,313 @@ fn generate_inst_table() -> HashMap<u8, Inst> {
         0xfe,
         Inst::new(AddressingType::AbsoluteX, Opcode::INC, 3, 7, false),
     );
-    
+    //invalid inst
+    hash.insert(
+        0x04,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x44,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x64,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x0c,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 3, 1, true),
+    );
+    hash.insert(
+        0x14,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x34,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x54,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x74,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0xd4,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0xf4,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x80,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 2, 1, true),
+    );
+    hash.insert(
+        0x1c,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 3, 1, true),
+    );
+    hash.insert(
+        0x3c,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 3, 1, true),
+    );
+    hash.insert(
+        0x5c,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 3, 1, true),
+    );
+    hash.insert(
+        0x7c,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 3, 1, true),
+    );
+    hash.insert(
+        0xdc,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 3, 1, true),
+    );
+    hash.insert(
+        0xfc,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 3, 1, true),
+    );
+    hash.insert(
+        0x1a,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 1, 1, true),
+    );
+    hash.insert(
+        0x3a,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 1, 1, true),
+    );
+    hash.insert(
+        0x5a,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 1, 1, true),
+    );
+    hash.insert(
+        0x7a,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 1, 1, true),
+    );
+    hash.insert(
+        0xda,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 1, 1, true),
+    );
+    hash.insert(
+        0xfa,
+        Inst::new(AddressingType::Implied, Opcode::NOP, 1, 1, true),
+    );
+    //invalid but useful (fuck stupid 6502)
+    hash.insert(
+        0xa3,
+        Inst::new(AddressingType::IndirectX, Opcode::LAX, 2, 1, true),
+    );
+    hash.insert(
+        0xa7,
+        Inst::new(AddressingType::ZeroPage, Opcode::LAX, 2, 1, true),
+    );
+    hash.insert(
+        0xaf,
+        Inst::new(AddressingType::Absolute, Opcode::LAX, 3, 1, true),
+    );
+    hash.insert(
+        0xb3,
+        Inst::new(AddressingType::IndirectY, Opcode::LAX, 2, 1, true),
+    );
+    hash.insert(
+        0xb7,
+        Inst::new(AddressingType::ZeroPageY, Opcode::LAX, 2, 1, true),
+    );
+    hash.insert(
+        0xbf,
+        Inst::new(AddressingType::AbsoluteY, Opcode::LAX, 3, 1, true),
+    );
+    hash.insert(
+        0x83,
+        Inst::new(AddressingType::IndirectX, Opcode::SAX, 2, 1, true),
+    );
+    hash.insert(
+        0x87,
+        Inst::new(AddressingType::ZeroPage, Opcode::SAX, 2, 1, true),
+    );
+    hash.insert(
+        0x97,
+        Inst::new(AddressingType::ZeroPageY, Opcode::SAX, 2, 1, true),
+    );
+    hash.insert(
+        0x8f,
+        Inst::new(AddressingType::Absolute, Opcode::SAX, 3, 1, true),
+    );
+    hash.insert(
+        0xeb,
+        Inst::new(AddressingType::Immediate, Opcode::SBC, 2, 1, true),
+    );
+    hash.insert(
+        0xc7,
+        Inst::new(AddressingType::ZeroPage, Opcode::DCP, 2, 1, true),
+    );
+    hash.insert(
+        0xd7,
+        Inst::new(AddressingType::ZeroPageX, Opcode::DCP, 2, 1, true),
+    );
+    hash.insert(
+        0xc3,
+        Inst::new(AddressingType::IndirectX, Opcode::DCP, 2, 1, true),
+    );
+    hash.insert(
+        0xd3,
+        Inst::new(AddressingType::IndirectY, Opcode::DCP, 2, 1, true),
+    );
+    hash.insert(
+        0xcf,
+        Inst::new(AddressingType::Absolute, Opcode::DCP, 3, 1, true),
+    );
+    hash.insert(
+        0xdf,
+        Inst::new(AddressingType::AbsoluteX, Opcode::DCP, 3, 1, true),
+    );
+    hash.insert(
+        0xdb,
+        Inst::new(AddressingType::AbsoluteY, Opcode::DCP, 3, 1, true),
+    );
+    hash.insert(
+        0xe7,
+        Inst::new(AddressingType::ZeroPage, Opcode::ISC, 2, 1, true),
+    );
+    hash.insert(
+        0xf7,
+        Inst::new(AddressingType::ZeroPageX, Opcode::ISC, 2, 1, true),
+    );
+    hash.insert(
+        0xe3,
+        Inst::new(AddressingType::IndirectX, Opcode::ISC, 2, 1, true),
+    );
+    hash.insert(
+        0xf3,
+        Inst::new(AddressingType::IndirectY, Opcode::ISC, 2, 1, true),
+    );
+    hash.insert(
+        0xef,
+        Inst::new(AddressingType::Absolute, Opcode::ISC, 3, 1, true),
+    );
+    hash.insert(
+        0xff,
+        Inst::new(AddressingType::AbsoluteX, Opcode::ISC, 3, 1, true),
+    );
+    hash.insert(
+        0xfb,
+        Inst::new(AddressingType::AbsoluteY, Opcode::ISC, 3, 1, true),
+    );
+    hash.insert(
+        0x07,
+        Inst::new(AddressingType::ZeroPage, Opcode::SLO, 2, 1, true),
+    );
+    hash.insert(
+        0x17,
+        Inst::new(AddressingType::ZeroPageX, Opcode::SLO, 2, 1, true),
+    );
+    hash.insert(
+        0x03,
+        Inst::new(AddressingType::IndirectX, Opcode::SLO, 2, 1, true),
+    );
+    hash.insert(
+        0x13,
+        Inst::new(AddressingType::IndirectY, Opcode::SLO, 2, 1, true),
+    );
+    hash.insert(
+        0x0f,
+        Inst::new(AddressingType::Absolute, Opcode::SLO, 3, 1, true),
+    );
+    hash.insert(
+        0x1f,
+        Inst::new(AddressingType::AbsoluteX, Opcode::SLO, 3, 1, true),
+    );
+    hash.insert(
+        0x1b,
+        Inst::new(AddressingType::AbsoluteY, Opcode::SLO, 3, 1, true),
+    );
+    hash.insert(
+        0x27,
+        Inst::new(AddressingType::ZeroPage, Opcode::RLA, 2, 1, true),
+    );
+    hash.insert(
+        0x37,
+        Inst::new(AddressingType::ZeroPageX, Opcode::RLA, 2, 1, true),
+    );
+    hash.insert(
+        0x23,
+        Inst::new(AddressingType::IndirectX, Opcode::RLA, 2, 1, true),
+    );
+    hash.insert(
+        0x33,
+        Inst::new(AddressingType::IndirectY, Opcode::RLA, 2, 1, true),
+    );
+    hash.insert(
+        0x2f,
+        Inst::new(AddressingType::Absolute, Opcode::RLA, 3, 1, true),
+    );
+    hash.insert(
+        0x3f,
+        Inst::new(AddressingType::AbsoluteX, Opcode::RLA, 3, 1, true),
+    );
+    hash.insert(
+        0x3b,
+        Inst::new(AddressingType::AbsoluteY, Opcode::RLA, 3, 1, true),
+    );
+    hash.insert(
+        0x47,
+        Inst::new(AddressingType::ZeroPage, Opcode::SRE, 2, 1, true),
+    );
+    hash.insert(
+        0x57,
+        Inst::new(AddressingType::ZeroPageX, Opcode::SRE, 2, 1, true),
+    );
+    hash.insert(
+        0x43,
+        Inst::new(AddressingType::IndirectX, Opcode::SRE, 2, 1, true),
+    );
+    hash.insert(
+        0x53,
+        Inst::new(AddressingType::IndirectY, Opcode::SRE, 2, 1, true),
+    );
+    hash.insert(
+        0x4f,
+        Inst::new(AddressingType::Absolute, Opcode::SRE, 3, 1, true),
+    );
+    hash.insert(
+        0x5f,
+        Inst::new(AddressingType::AbsoluteX, Opcode::SRE, 3, 1, true),
+    );
+    hash.insert(
+        0x5b,
+        Inst::new(AddressingType::AbsoluteY, Opcode::SRE, 3, 1, true),
+    );
+    hash.insert(
+        0x67,
+        Inst::new(AddressingType::ZeroPage, Opcode::RRA, 2, 1, true),
+    );
+    hash.insert(
+        0x77,
+        Inst::new(AddressingType::ZeroPageX, Opcode::RRA, 2, 1, true),
+    );
+    hash.insert(
+        0x63,
+        Inst::new(AddressingType::IndirectX, Opcode::RRA, 2, 1, true),
+    );
+    hash.insert(
+        0x73,
+        Inst::new(AddressingType::IndirectY, Opcode::RRA, 2, 1, true),
+    );
+    hash.insert(
+        0x6f,
+        Inst::new(AddressingType::Absolute, Opcode::RRA, 3, 1, true),
+    );
+    hash.insert(
+        0x7f,
+        Inst::new(AddressingType::AbsoluteX, Opcode::RRA, 3, 1, true),
+    );
+    hash.insert(
+        0x7b,
+        Inst::new(AddressingType::AbsoluteY, Opcode::RRA, 3, 1, true),
+    );
+
     hash
 }
 

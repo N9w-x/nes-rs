@@ -84,6 +84,7 @@ pub fn trace<P: AsRef<Path>>(path: P) {
             exit(-1);
         }
     }
+    println!("finish all test!");
 }
 
 #[test]
