@@ -18,6 +18,7 @@ mod error;
 mod ram;
 mod rom;
 mod trace;
+mod ppu;
 
 fn main() {
     trace::trace("./test/nestest.log");
